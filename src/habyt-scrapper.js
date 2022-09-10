@@ -142,3 +142,35 @@ async function createRoom(room) {
     };
     await dynamo.put(params).promise();
 }
+
+function jsonToRoom(roomJson) {
+    return {
+        id: roomJson.id,
+        availableDate: roomJson.availableDate,
+        rentEuros: roomJson.rent.amount,
+        shareType: roomJson.shareType,
+        bedrooms: roomJson.apartment.bedrooms,
+        area: roomJson.area.value,
+        location: roomJson.property.neighbourhood.name
+    }
+}
+
+function getDateTimeFormattedText(date) {
+    return date.toLocaleString(undefined, {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
+function getCurrentIstTime() {
+    const date = new Date();
+    var ISToffSet = 330; //IST is 5:30; i.e. 60*5+30 = 330 in minutes
+    offset = ISToffSet * 60 * 1000;
+    var ISTTime = new Date(date.getTime() + offset);
+    return ISTTime;
+}
+
+module.exports = {jsonToRoom, getDateTimeFormattedText, getCurrentIstTime}
