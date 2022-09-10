@@ -108,3 +108,11 @@ test('Convert json from habyt to database room object', async () => {
         "shareType": "PRIVATE_ROOM"
     });
 });
+
+test('Get date time formatted', async () => {
+    const testDate = new Date(2022, 3, 12, 12, 12, 45);
+    const expectedDateString = "2022-04-12, 12:12:45 p.m."
+
+    expect(scrapper.getDateTimeFormattedText(testDate)).toBe(expectedDateString)
+    }
+);
