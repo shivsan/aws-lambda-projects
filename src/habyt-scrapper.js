@@ -37,14 +37,14 @@ const params = {
  * Will succeed with the response body.
  */
 const body = {
-    "query":"fragment baseRoomFields on Room {\n  id\n  code\n  bookable\n  availableDate\n  shareType\n  amenities\n  images {\n    url\n    __typename\n  }\n  rent {\n    amount\n    currencySymbol\n    __typename\n  }\n  area {\n    unit\n    value\n    __typename\n  }\n  apartment {\n    id\n    floor\n    bedrooms\n    amenities\n    images {\n      url\n      __typename\n    }\n    __typename\n  }\n  property {\n    id\n    code\n    coordinates {\n      latitude\n      longitude\n      __typename\n    }\n    neighbourhood {\n      name\n      __typename\n    }\n    amenities\n    images {\n      url\n      __typename\n    }\n    address {\n      addressLine1\n      city\n      __typename\n    }\n    __typename\n  }\n}\n\nquery RoomCollection($where: RoomFilter, $limit: Int, $offset: Int) {\n  roomCollection(where: $where, limit: $limit, offset: $offset) {\n    items {\n      ...baseRoomFields\n      __typename\n    }\n    __typename\n  }\n}",
-    "operationName":"RoomCollection",
-    "variables":{
+    "query": "fragment baseRoomFields on Room {\n  id\n  code\n  bookable\n  availableDate\n  shareType\n  amenities\n  images {\n    url\n    __typename\n  }\n  rent {\n    amount\n    currencySymbol\n    __typename\n  }\n  area {\n    unit\n    value\n    __typename\n  }\n  apartment {\n    id\n    floor\n    bedrooms\n    amenities\n    images {\n      url\n      __typename\n    }\n    __typename\n  }\n  property {\n    id\n    code\n    coordinates {\n      latitude\n      longitude\n      __typename\n    }\n    neighbourhood {\n      name\n      __typename\n    }\n    amenities\n    images {\n      url\n      __typename\n    }\n    address {\n      addressLine1\n      city\n      __typename\n    }\n    __typename\n  }\n}\n\nquery RoomCollection($where: RoomFilter, $limit: Int, $offset: Int) {\n  roomCollection(where: $where, limit: $limit, offset: $offset) {\n    items {\n      ...baseRoomFields\n      __typename\n    }\n    __typename\n  }\n}",
+    "operationName": "RoomCollection",
+    "variables": {
         "where":
             {
-                "city":"Berlin","availableFrom":"2022-10-10","shareType":null,"bookable":true
+                "city": "Berlin", "availableFrom": "2022-10-10", "shareType": null, "bookable": true
             },
-        "limit":2000
+        "limit": 2000
     }
 };
 const options = {
@@ -65,8 +65,7 @@ exports.handler = async event => {
         const result = await postRequest();
         const newRooms = [];
         // Store in db
-        for(const room of result.data.roomCollection.items)
-        {
+        for (const room of result.data.roomCollection.items) {
             try {
                 await createRoom({
                     id: room.id,
@@ -80,13 +79,13 @@ exports.handler = async event => {
                 });
 
                 newRooms.push(jsonToRoom(room));
-            }
-            catch (error) {
+            } catch (error) {
                 console.log("Row already exists!")
             }
-        };
+        }
+        ;
 
-        if(newRooms.length > 0)
+        if (newRooms.length > 0)
             await sendRoomsInEmail(newRooms);
 
         // 👇️️ response structure assume you use proxy integration with API gateway
@@ -138,7 +137,7 @@ function postRequest() {
 async function getRoom(roomId) {
     var params = {
         "Key": {
-            "id" : roomId
+            "id": roomId
         },
         TableName: 'habyt-rooms'
     };
@@ -152,7 +151,7 @@ async function getRooms() {
 
     let scanResults = [];
     let items;
-    let params = { TableName: tableName };
+    let params = {TableName: tableName};
 
     do {
         items = await dynamo.scan(params).promise();
@@ -188,52 +187,80 @@ async function sendEmail(data) {
 }
 
 async function sendRoomsInEmail(rooms) {
-    var data = `<html>
+
+    const data = formatEmailText(rooms);
+
+    await sendEmail(data)
+}
+
+function formatEmailText(rooms) {
+    let data = `<html>
   The following rooms are available:<br>
       <table>
-        <th>
-          <td>
-            Location
-          </td>
-          <td>
-            Cost in euros
-          </td>
-          <td>
+        <head>
+            <style>
+                table, th, td {
+                  border: 1px solid black;
+                }
+            </style>
+        </head>
+        <tr>
+          <th>
+            Id
+          </th>
+          <th>
+            Area
+          </th>
+          <th>
             Available date
-          </td>
-          <td>
+          </th>
+          <th>
             bedrooms
-          </td>
-          <td>
-            area
-          </td>
-        </th>
+          </th>
+          <th>
+            Location
+          </th>
+          <th>
+            Cost in euros
+          </th>
+          <th>
+            Room type
+          </th>
+        </tr>
   `;
 
-    for(var room in rooms) {
+    for (const room of rooms) {
         data += `
-      <td>
-            ${room.location}
-          </td>
-          <td>
-            ${room.cost}
-          </td>
-          <td>
-            ${room.availableDate}
-          </td>
-          <td>
-            ${room.bedrooms}
-          </td>
-          <td>
-            ${room.area}
-          </td>
+          <tr>
+              <td>
+                ${room.id}
+              </td>
+              <td>
+                ${room.area}
+              </td>
+              <td>
+                ${room.availableDate}
+              </td>
+              <td>
+                ${room.bedrooms}
+              </td>
+              <td>
+                ${room.location}
+              </td>
+              <td>
+                ${room.rentEuros}
+              </td>
+              <td>
+                ${room.shareType}
+              </td>
+          </tr>
     `;
     }
 
     data += "</table></html>";
-
-    await sendEmail(data)
+    return data;
 }
+
 
 function jsonToRoom(roomJson) {
     return {
@@ -254,9 +281,9 @@ function getDateTimeFormattedText(date) {
 function getCurrentIstTime() {
     const date = new Date();
     var ISToffSet = 330; //IST is 5:30; i.e. 60*5+30 = 330 in minutes
-    offset = ISToffSet * 60 * 1000;
+    var offset = ISToffSet * 60 * 1000;
     var ISTTime = new Date(date.getTime() + offset);
     return ISTTime;
 }
 
-module.exports = {jsonToRoom, getDateTimeFormattedText, getCurrentIstTime}
+module.exports = {formatEmailText, jsonToRoom, getDateTimeFormattedText, getCurrentIstTime}

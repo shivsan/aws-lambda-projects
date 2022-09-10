@@ -110,9 +110,82 @@ test('Convert json from habyt to database room object', async () => {
 });
 
 test('Get date time formatted', async () => {
-    const testDate = new Date(2022, 3, 12, 12, 12, 45);
-    const expectedDateString = "2022-04-12, 12:12:45 p.m."
+        const testDate = new Date(2022, 3, 12, 12, 12, 45);
+        const expectedDateString = "2022-04-12, 12:12:45 p.m."
 
-    expect(scrapper.getDateTimeFormattedText(testDate)).toBe(expectedDateString)
+        expect(scrapper.getDateTimeFormattedText(testDate)).toBe(expectedDateString)
     }
 );
+
+test('format email text', async () => {
+    const room = {
+        id: "a021i0000057vQ9AAI",
+        "area": 12.62,
+        "availableDate": "2022-10-19",
+        "bedrooms": 3,
+        "location": "Wedding",
+        "rentEuros": 990,
+        "shareType": "PRIVATE_ROOM"
+    }
+
+    const expectedEmailText = `<html>
+  The following rooms are available:<br>
+      <table>
+        <head>
+            <style>
+                table, th, td {
+                  border: 1px solid black;
+                }
+            </style>
+        </head>
+        <tr>
+          <th>
+            Id
+          </th>
+          <th>
+            Area
+          </th>
+          <th>
+            Available date
+          </th>
+          <th>
+            bedrooms
+          </th>
+          <th>
+            Location
+          </th>
+          <th>
+            Cost in euros
+          </th>
+          <th>
+            Room type
+          </th>
+        </tr>
+  
+          <tr>
+              <td>
+                a021i0000057vQ9AAI
+              </td>
+              <td>
+                12.62
+              </td>
+              <td>
+                2022-10-19
+              </td>
+              <td>
+                3
+              </td>
+              <td>
+                Wedding
+              </td>
+              <td>
+                990
+              </td>
+              <td>
+                PRIVATE_ROOM
+              </td>
+          </tr>
+    </table></html>`
+
+    expect(scrapper.formatEmailText([room])).toBe(expectedEmailText)
+})
