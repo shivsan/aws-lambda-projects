@@ -26,7 +26,7 @@ const params = {
         'skumarsekartrp@gmail.com'
     ],
 };
-
+const startDate = process.env.startDate
 // const command = new CloneReceiptRuleSetCommand(params);
 
 /**
@@ -42,7 +42,7 @@ const body = {
     "variables": {
         "where":
             {
-                "city": "Berlin", "availableFrom": "2022-10-10", "shareType": null, "bookable": true
+                "city": "Berlin", "availableFrom": startDate, "shareType": null, "bookable": true
             },
         "limit": 2000
     }
@@ -179,6 +179,7 @@ async function sendEmail(data) {
         params.Message.Body.Html.Data = data;
         console.log("Sending mail")
         await emailClient.sendEmail(params).promise();
+        console.log("Email sent!!")
     } catch (error) {
 
     } finally {
@@ -226,6 +227,9 @@ function formatEmailText(rooms) {
           <th>
             Room type
           </th>
+          <th>
+            Url
+          </th>
         </tr>
   `;
 
@@ -253,6 +257,9 @@ function formatEmailText(rooms) {
               <td>
                 ${room.shareType}
               </td>
+              <td>
+                <a href="https://www.habyt.com/room/berlin/${room.code}">link</a>
+              </td>
           </tr>
     `;
     }
@@ -261,17 +268,15 @@ function formatEmailText(rooms) {
     return data;
 }
 
-
 function jsonToRoom(roomJson) {
-    return {
-        id: roomJson.id,
-        availableDate: roomJson.availableDate,
-        rentEuros: roomJson.rent.amount,
-        shareType: roomJson.shareType,
-        bedrooms: roomJson.apartment.bedrooms,
-        area: roomJson.area.value,
-        location: roomJson.property.neighbourhood.name
-    }
+    return new Room(roomJson.id,
+        roomJson.availableDate,
+        roomJson.rent.amount,
+        roomJson.shareType,
+        roomJson.apartment.bedrooms,
+        roomJson.area.value,
+        roomJson.property.neighbourhood.name,
+        roomJson.code);
 }
 
 function getDateTimeFormattedText(date) {
@@ -286,4 +291,25 @@ function getCurrentIstTime() {
     return ISTTime;
 }
 
-module.exports = {formatEmailText, jsonToRoom, getDateTimeFormattedText, getCurrentIstTime}
+class Room {
+    constructor(
+        id,
+        availableDate,
+        rentEuros,
+        shareType,
+        bedrooms,
+        area,
+        location,
+        code) {
+        this.id = id;
+        this.availableDate = availableDate;
+        this.rentEuros = rentEuros;
+        this.shareType = shareType;
+        this.bedrooms = bedrooms;
+        this.area = area;
+        this.location = location;
+        this.code = code;
+    }
+}
+
+module.exports = {formatEmailText, jsonToRoom, getDateTimeFormattedText, getCurrentIstTime, Room}

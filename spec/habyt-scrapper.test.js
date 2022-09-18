@@ -1,4 +1,5 @@
 const scrapper = require("../src/habyt-scrapper");
+const {Room} = require("../src/habyt-scrapper");
 
 test('Convert json from habyt to database room object', async () => {
     const roomJson = {
@@ -98,15 +99,16 @@ test('Convert json from habyt to database room object', async () => {
         "__typename": "Room"
     };
 
-    expect(scrapper.jsonToRoom(roomJson)).toStrictEqual({
-        id: "a021i0000057vQ9AAI",
-        "area": 12.62,
-        "availableDate": "2022-10-19",
-        "bedrooms": 3,
-        "location": "Wedding",
-        "rentEuros": 990,
-        "shareType": "PRIVATE_ROOM"
-    });
+    expect(scrapper.jsonToRoom(roomJson)).toStrictEqual(
+        new Room("a021i0000057vQ9AAI",
+            "2022-10-19",
+            990,
+            "PRIVATE_ROOM",
+            3,
+            12.62,
+            "Wedding",
+            "DE-01-001-001-02H"
+        ));
 });
 
 test('Get date time formatted', async () => {
@@ -118,15 +120,16 @@ test('Get date time formatted', async () => {
 );
 
 test('format email text', async () => {
-    const room = {
-        id: "a021i0000057vQ9AAI",
-        "area": 12.62,
-        "availableDate": "2022-10-19",
-        "bedrooms": 3,
-        "location": "Wedding",
-        "rentEuros": 990,
-        "shareType": "PRIVATE_ROOM"
-    }
+    const room = new Room(
+        "a021i0000057vQ9AAI",
+        "2022-10-19",
+        990,
+        "PRIVATE_ROOM",
+        3,
+        12.62,
+        "Wedding",
+        "DE-01-004-001-02HF"
+    );
 
     const expectedEmailText = `<html>
   The following rooms are available:<br>
@@ -160,6 +163,9 @@ test('format email text', async () => {
           <th>
             Room type
           </th>
+          <th>
+            Url
+          </th>
         </tr>
   
           <tr>
@@ -183,6 +189,9 @@ test('format email text', async () => {
               </td>
               <td>
                 PRIVATE_ROOM
+              </td>
+              <td>
+                <a href="https://www.habyt.com/room/berlin/DE-01-004-001-02HF">link</a>
               </td>
           </tr>
     </table></html>`
